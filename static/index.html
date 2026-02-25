@@ -372,6 +372,34 @@
     .btn-download:hover  { background: var(--red); color: #fff; }
     .btn-download:active { transform: translate(2px,2px); box-shadow: none; }
 
+    /* ── Footer ─────────────────────────────────────────────────── */
+    footer {
+      background: var(--navy);
+      padding: .9rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    footer a {
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--yellow);
+      border-bottom: 2px solid transparent;
+      transition: border-color var(--transition);
+    }
+    footer a:hover { border-bottom-color: var(--yellow); }
+    footer .footer-sep {
+      width: 4px;
+      height: 4px;
+      background: var(--red);
+      border-radius: 50%;
+    }
+
     /* ── Scrollbar ──────────────────────────────────────────────── */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -662,6 +690,12 @@
   </div>
 
 </main>
+
+<footer>
+  <a href="https://sarvam.ai" target="_blank" rel="noopener">Powered by Sarvam AI</a>
+  <span class="footer-sep"></span>
+  <a href="https://github.com/knightsri/sarvam-explorer" target="_blank" rel="noopener">View Source on GitHub</a>
+</footer>
 
 <!-- ── HISTORY PANEL ─────────────────────────────────────────── -->
 <aside id="historyPanel" class="history-panel">
