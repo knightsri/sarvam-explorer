@@ -93,6 +93,7 @@ async def analyse(
                 "language_code": trans["language_code"],
                 "analysis": analysis,
                 "session_id": session_id,
+                "truncated": trans.get("truncated", False),
             }
         )
 

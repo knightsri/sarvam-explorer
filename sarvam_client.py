@@ -15,6 +15,7 @@ from sarvamai import SarvamAI
 SARVAM_API_KEY: str = os.environ["SARVAM_API_KEY"]  # fail-fast — checked in main.py first
 SARVAM_BASE_URL = "https://api.sarvam.ai"
 CHUNK_SECONDS = 25
+MAX_DURATION = 60   # Only the first 60 seconds of any upload are processed
 FFMPEG = "ffmpeg"
 
 
@@ -78,61 +79,85 @@ def get_audio_duration(audio_path: str) -> float:
     return float(result.stdout.strip())
 
 
-def transcribe_audio(audio_path: str, language_code: str = "en-IN") -> dict[str, str]:
+def transcribe_audio(audio_path: str, language_code: str = "en-IN") -> dict:
     """
     Transcribe an MP3 file using Saarika v3.
 
+    Files longer than MAX_DURATION seconds are silently trimmed to the first
+    MAX_DURATION seconds before transcription; the result includes truncated=True.
     Chunks audio into 25s segments via ffmpeg if duration > 30s.
-    Returns {"transcript": str, "language_code": str}.
+    Returns {"transcript": str, "language_code": str, "truncated": bool}.
     """
     sarvam = _sarvam()
     duration = get_audio_duration(audio_path)
+    truncated = duration > MAX_DURATION
+    trimmed_path: str | None = None
 
-    def _transcribe_file(path: str, name: str) -> tuple[str, str | None]:
-        with open(path, "rb") as f:
-            resp = sarvam.speech_to_text.transcribe(
-                file=(name, f, "audio/mpeg"),
-                model="saarika:v3",
-                mode="transcribe",
-                language_code=language_code,
-            )
-        return (resp.transcript or ""), resp.language_code
-
-    if duration <= 30:
-        text, lang = _transcribe_file(audio_path, Path(audio_path).name)
-        return {"transcript": text, "language_code": lang or language_code}
-
-    # Chunked path
-    starts = list(range(0, int(duration), CHUNK_SECONDS))
-    transcripts: list[str] = []
-    detected_lang: str | None = None
-
-    with tempfile.TemporaryDirectory() as tmpdir:
-        for i, start_t in enumerate(starts):
-            chunk_path = os.path.join(tmpdir, f"chunk_{i:03d}.mp3")
+    try:
+        if truncated:
+            tmp = tempfile.NamedTemporaryFile(suffix=".mp3", delete=False)
+            trimmed_path = tmp.name
+            tmp.close()
             subprocess.run(
-                [
-                    FFMPEG, "-y",
-                    "-ss", str(start_t),
-                    "-t", str(CHUNK_SECONDS),
-                    "-i", audio_path,
-                    "-ar", "16000",
-                    "-ac", "1",
-                    chunk_path,
-                ],
+                [FFMPEG, "-y", "-t", str(MAX_DURATION), "-i", audio_path,
+                 "-c", "copy", trimmed_path],
                 capture_output=True,
                 check=True,
             )
-            text, lang = _transcribe_file(chunk_path, f"chunk_{i:03d}.mp3")
-            if text:
-                transcripts.append(text)
-            if not detected_lang and lang:
-                detected_lang = lang
+            audio_path = trimmed_path
+            duration = MAX_DURATION
 
-    return {
-        "transcript": " ".join(transcripts),
-        "language_code": detected_lang or language_code,
-    }
+        def _transcribe_file(path: str, name: str) -> tuple[str, str | None]:
+            with open(path, "rb") as f:
+                resp = sarvam.speech_to_text.transcribe(
+                    file=(name, f, "audio/mpeg"),
+                    model="saarika:v3",
+                    mode="transcribe",
+                    language_code=language_code,
+                )
+            return (resp.transcript or ""), resp.language_code
+
+        if duration <= 30:
+            text, lang = _transcribe_file(audio_path, Path(audio_path).name)
+            return {"transcript": text, "language_code": lang or language_code,
+                    "truncated": truncated}
+
+        # Chunked path
+        starts = list(range(0, int(duration), CHUNK_SECONDS))
+        transcripts: list[str] = []
+        detected_lang: str | None = None
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            for i, start_t in enumerate(starts):
+                chunk_path = os.path.join(tmpdir, f"chunk_{i:03d}.mp3")
+                subprocess.run(
+                    [
+                        FFMPEG, "-y",
+                        "-ss", str(start_t),
+                        "-t", str(CHUNK_SECONDS),
+                        "-i", audio_path,
+                        "-ar", "16000",
+                        "-ac", "1",
+                        chunk_path,
+                    ],
+                    capture_output=True,
+                    check=True,
+                )
+                text, lang = _transcribe_file(chunk_path, f"chunk_{i:03d}.mp3")
+                if text:
+                    transcripts.append(text)
+                if not detected_lang and lang:
+                    detected_lang = lang
+
+        return {
+            "transcript": " ".join(transcripts),
+            "language_code": detected_lang or language_code,
+            "truncated": truncated,
+        }
+
+    finally:
+        if trimmed_path:
+            Path(trimmed_path).unlink(missing_ok=True)
 
 
 # ── Step 1b: Analysis ─────────────────────────────────────────────────────────

@@ -812,6 +812,12 @@
       resultsCard.style.display = "block";
       revealStep2();
       setStatus(step1Status, "success", false, "✓ Analysis complete.");
+      if (data.truncated) {
+        step1Status.innerHTML +=
+          '<br><span style="color:var(--orange);font-size:.8rem;">' +
+          '⚠ Audio is longer than 1 minute — only the first 60 seconds were processed.' +
+          '</span>';
+      }
     } catch (err) {
       setStatus(step1Status, "error", false, "Error: " + err.message);
     } finally {
