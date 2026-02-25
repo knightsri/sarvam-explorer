@@ -15,7 +15,7 @@ from sarvamai import SarvamAI
 SARVAM_API_KEY: str = os.environ["SARVAM_API_KEY"]  # fail-fast — checked in main.py first
 SARVAM_BASE_URL = "https://api.sarvam.ai"
 CHUNK_SECONDS = 25
-MAX_DURATION = 60   # Only the first 60 seconds of any upload are processed
+MAX_DURATION = int(os.getenv("MAX_AUDIO_DURATION", "60"))  # seconds; override via env
 FFMPEG = "ffmpeg"
 
 

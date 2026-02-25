@@ -206,3 +206,4 @@ docker-compose down -v
 |---|---|---|---|
 | `SARVAM_API_KEY` | Yes | — | Sarvam API subscription key |
 | `PORT` | No | `8000` | Port the server listens on |
+| `MAX_AUDIO_DURATION` | No | `60` | Maximum audio length in seconds; longer files are trimmed to this before transcription |
