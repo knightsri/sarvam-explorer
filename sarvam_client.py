@@ -80,7 +80,7 @@ def get_audio_duration(audio_path: str) -> float:
 
 def transcribe_audio(audio_path: str, language_code: str = "en-IN") -> dict[str, str]:
     """
-    Transcribe an MP3 file using Saarika v2.5.
+    Transcribe an MP3 file using Saarika v3.
 
     Chunks audio into 25s segments via ffmpeg if duration > 30s.
     Returns {"transcript": str, "language_code": str}.
@@ -92,7 +92,7 @@ def transcribe_audio(audio_path: str, language_code: str = "en-IN") -> dict[str,
         with open(path, "rb") as f:
             resp = sarvam.speech_to_text.transcribe(
                 file=(name, f, "audio/mpeg"),
-                model="saarika:v2.5",
+                model="saarika:v3",
                 mode="transcribe",
                 language_code=language_code,
             )

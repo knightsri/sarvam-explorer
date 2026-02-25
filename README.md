@@ -66,7 +66,7 @@ The first card is labelled **Step 1 — Upload & Transcribe**.
 3. Click **Analyse**.
 
    The button disables and two status messages appear in sequence:
-   - `Transcribing audio…` — audio is being chunked and sent to **Saarika v2.5 ASR**
+   - `Transcribing audio…` — audio is being chunked and sent to **Saarika v3 ASR**
    - `Analysing transcript…` — transcript is being sent to **Sarvam-M LLM**
 
    For a 3-minute file, expect 20–40 seconds total.
