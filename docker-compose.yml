@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  sarvam-explorer:
+    build: .
+    ports:
+      - "${PORT:-8000}:${PORT:-8000}"
+    env_file:
+      - .env
+    volumes:
+      - uploads:/app/uploads
+      - outputs:/app/outputs
+      - db_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  uploads:
+  outputs:
+  db_data:

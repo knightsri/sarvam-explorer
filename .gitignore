@@ -1,0 +1,19 @@
+# Environment
+.env
+
+# Runtime directories
+uploads/*
+outputs/*
+data/*
+!uploads/.gitkeep
+!outputs/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Docker
+*.log

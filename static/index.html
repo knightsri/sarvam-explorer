@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sarvam Explorer</title>
+  <style>
+    /* ── Reset ──────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Bhupen Khakhar palette ──────────────────────────────────
+       Unapologetic cadmium red · chrome yellow · cobalt blue ·
+       viridian green · burnt orange — flat, no gradients          */
+    :root {
+      --red:        #C8102E;   /* cadmium red     */
+      --yellow:     #F4C430;   /* chrome yellow   */
+      --blue:       #1B3FAD;   /* cobalt blue     */
+      --blue-dark:  #0F2B7A;
+      --blue-light: #EEF2FF;
+      --green:      #1A7A3E;   /* viridian        */
+      --orange:     #E05510;   /* burnt orange    */
+      --navy:       #1C1410;   /* warm near-black */
+      --slate:      #5A4030;
+      --slate-lt:   #9A8070;
+      --border:     #C8B090;   /* warm tan        */
+      --bg:         #FDF5E6;   /* linen           */
+      --card:       #FFFDF7;   /* warm white      */
+      --radius:     3px;
+      --transition: 0.18s ease;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--navy);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────── */
+    header {
+      background: var(--red);
+      padding: .95rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+    header h1 {
+      font-size: 1.25rem;
+      font-weight: 900;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--yellow);
+    }
+    header .badge {
+      font-size: .6rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      background: var(--blue);
+      color: var(--yellow);
+      padding: .2rem .6rem;
+      border-radius: 2px;
+    }
+
+    /* ── Khakhar colour-band strip ─────────────────────────────── */
+    .color-strip {
+      height: 10px;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--red)    0px  24px,
+        var(--yellow) 24px 48px,
+        var(--blue)   48px 72px,
+        var(--green)  72px 96px,
+        var(--orange) 96px 120px
+      );
+    }
+
+    /* ── Layout ─────────────────────────────────────────────────── */
+    main {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 1.75rem 1rem 3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Cards use flat hard-offset shadow — no blur, no soft edge */
+    .card {
+      background: var(--card);
+      border: 2px solid var(--navy);
+      border-radius: var(--radius);
+      box-shadow: 5px 5px 0 var(--navy);
+      padding: 1.5rem;
+    }
+
+    /* Bold left accent bar per step */
+    .card-step1   { border-left: 7px solid var(--red); }
+    .card-results { border-left: 7px solid var(--blue); }
+    .card-step2   { border-left: 7px solid var(--green); }
+
+    .card-title {
+      font-size: .7rem;
+      font-weight: 900;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      padding-bottom: .55rem;
+      margin-bottom: 1.1rem;
+      border-bottom: 2px solid currentColor;
+    }
+    .card-step1   .card-title { color: var(--red); }
+    .card-results .card-title { color: var(--blue); }
+    .card-step2   .card-title { color: var(--green); }
+
+    /* ── Forms ──────────────────────────────────────────────────── */
+    .row { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+
+    .row-label {
+      font-size: .75rem;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--slate);
+      white-space: nowrap;
+    }
+
+    .file-label {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      cursor: pointer;
+      padding: .55rem 1rem;
+      border: 2px dashed var(--red);
+      border-radius: var(--radius);
+      font-size: .875rem;
+      font-weight: 700;
+      color: var(--red);
+      transition: background var(--transition);
+      white-space: nowrap;
+    }
+    .file-label:hover { background: #FFF0F0; }
+    .file-label.has-file { border-style: solid; background: #FFF0F0; }
+    #audioFile { display: none; }
+
+    select {
+      padding: .55rem .85rem;
+      border: 2px solid var(--navy);
+      border-radius: var(--radius);
+      font-size: .875rem;
+      font-weight: 600;
+      color: var(--navy);
+      background: var(--card);
+      cursor: pointer;
+      outline: none;
+      transition: border-color var(--transition);
+      -webkit-appearance: auto;
+    }
+    select:focus { border-color: var(--blue); }
+
+    /* Flat buttons with hard offset shadow */
+    .btn {
+      padding: .55rem 1.3rem;
+      border: 2px solid transparent;
+      border-radius: var(--radius);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background var(--transition);
+      white-space: nowrap;
+    }
+    .btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: none !important; }
+
+    #analyseBtn {
+      background: var(--blue);
+      color: #fff;
+      border-color: var(--blue);
+      box-shadow: 3px 3px 0 var(--navy);
+    }
+    #analyseBtn:hover:not(:disabled) { background: var(--blue-dark); border-color: var(--blue-dark); }
+    #analyseBtn:disabled { opacity: .38; cursor: not-allowed; box-shadow: none; }
+
+    #submitBtn {
+      background: var(--green);
+      color: #fff;
+      border-color: var(--green);
+      box-shadow: 3px 3px 0 var(--navy);
+    }
+    #submitBtn:hover:not(:disabled) { background: #145E30; border-color: #145E30; }
+    #submitBtn:disabled { opacity: .38; cursor: not-allowed; box-shadow: none; }
+
+    /* ── Status messages ────────────────────────────────────────── */
+    .status {
+      font-size: .82rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      margin-top: .85rem;
+      min-height: 1.4rem;
+    }
+    .status.info    { color: var(--blue); }
+    .status.error   { color: var(--red); }
+    .status.success { color: var(--green); }
+    .status:empty   { display: none; }
+
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2.5px solid currentColor;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Results two-column ─────────────────────────────────────── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* Solid colour panel-head labels — Khakhar's flat colour blocks */
+    .panel-head {
+      font-size: .65rem;
+      font-weight: 900;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #fff;
+      padding: .32rem .7rem;
+      margin-bottom: .9rem;
+      border-radius: 2px;
+      display: inline-block;
+    }
+    .ph-analysis   { background: var(--blue); }
+    .ph-transcript { background: var(--red); }
+
+    /* ── Analysis panel ─────────────────────────────────────────── */
+    .analysis-item { margin-bottom: .9rem; }
+
+    .analysis-label {
+      font-size: .66rem;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--slate-lt);
+      margin-bottom: .3rem;
+    }
+    .analysis-value { font-size: .9rem; }
+
+    /* Tone badges: solid primary colours, no pastel */
+    .tone-badge {
+      display: inline-block;
+      padding: .2rem .65rem;
+      border-radius: 2px;
+      font-size: .73rem;
+      font-weight: 800;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+    .tone-positive { background: var(--green);  color: #fff; }
+    .tone-negative { background: var(--red);    color: #fff; }
+    .tone-neutral  { background: var(--yellow); color: var(--navy); }
+
+    .tag-list { display: flex; flex-wrap: wrap; gap: .35rem; }
+    .tag {
+      display: inline-block;
+      background: var(--blue);
+      color: #fff;
+      border-radius: 2px;
+      padding: .18rem .58rem;
+      font-size: .73rem;
+      font-weight: 700;
+    }
+
+    /* ── Transcript panel ───────────────────────────────────────── */
+    .transcript-box {
+      font-size: .88rem;
+      line-height: 1.8;
+      color: var(--navy);
+      max-height: 320px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #FFFBF0;
+      border: 2px solid var(--border);
+      border-radius: 2px;
+      padding: .75rem;
+    }
+
+    /* ── Step 2 reveal animation ────────────────────────────────── */
+    #step2 {
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity .35s ease, transform .35s ease;
+      pointer-events: none;
+    }
+    #step2.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    textarea.translated-box {
+      width: 100%;
+      min-height: 110px;
+      border: 2px solid var(--blue);
+      border-radius: var(--radius);
+      padding: .75rem;
+      font-size: .875rem;
+      font-family: inherit;
+      resize: vertical;
+      color: var(--navy);
+      background: #F5F7FF;
+      margin-top: .75rem;
+    }
+    textarea.translated-box:read-only { cursor: default; }
+
+    /* ── Waveform ───────────────────────────────────────────────── */
+    #waveformWrap { margin-top: 1.25rem; display: none; }
+
+    #waveform {
+      border: 2px solid var(--navy);
+      border-radius: 2px;
+      overflow: hidden;
+      background: #FFFBF0;
+    }
+
+    .audio-controls {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin-top: .85rem;
+    }
+
+    .btn-play {
+      padding: .5rem 1.2rem;
+      border: 2px solid var(--navy);
+      background: var(--yellow);
+      color: var(--navy);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 2px;
+      box-shadow: 3px 3px 0 var(--navy);
+      transition: background var(--transition);
+    }
+    .btn-play:hover  { background: #E0B020; }
+    .btn-play:active { transform: translate(2px,2px); box-shadow: none; }
+
+    .btn-download {
+      padding: .5rem 1.2rem;
+      border: 2px solid var(--red);
+      background: transparent;
+      color: var(--red);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 2px;
+      text-decoration: none;
+      box-shadow: 3px 3px 0 var(--red);
+      transition: background var(--transition), color var(--transition);
+    }
+    .btn-download:hover  { background: var(--red); color: #fff; }
+    .btn-download:active { transform: translate(2px,2px); box-shadow: none; }
+
+    /* ── Scrollbar ──────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--red); border-radius: 2px; }
+
+    /* ── History button (header) ────────────────────────────────── */
+    .btn-history {
+      margin-left: auto;
+      padding: .45rem 1rem;
+      border: 2px solid var(--yellow);
+      background: transparent;
+      color: var(--yellow);
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 2px;
+      box-shadow: 3px 3px 0 var(--navy);
+      transition: background var(--transition), color var(--transition);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .btn-history:hover  { background: var(--yellow); color: var(--navy); }
+    .btn-history:active { transform: translate(2px,2px); box-shadow: none; }
+
+    /* ── History panel ──────────────────────────────────────────── */
+    .history-panel {
+      position: fixed;
+      top: 0; right: 0;
+      width: 360px;
+      height: 100%;
+      background: var(--card);
+      border-left: 3px solid var(--navy);
+      box-shadow: -5px 0 0 var(--navy);
+      overflow-y: auto;
+      z-index: 1000;
+      transform: translateX(100%);
+      transition: transform .3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .history-panel.open { transform: translateX(0); }
+
+    @media (max-width: 480px) { .history-panel { width: 100%; } }
+
+    .history-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .85rem 1rem;
+      background: var(--red);
+      border-bottom: 3px solid var(--navy);
+      flex-shrink: 0;
+    }
+    .history-panel-title {
+      font-size: .7rem;
+      font-weight: 900;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--yellow);
+    }
+    .btn-close-history {
+      background: transparent;
+      border: 2px solid var(--yellow);
+      color: var(--yellow);
+      font-size: .7rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: .25rem .65rem;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: background var(--transition);
+    }
+    .btn-close-history:hover { background: var(--yellow); color: var(--navy); }
+
+    #historyList {
+      padding: 1rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: .85rem;
+    }
+    .history-empty {
+      font-size: .83rem;
+      color: var(--slate-lt);
+      text-align: center;
+      padding: 2rem 0;
+      font-style: italic;
+    }
+
+    /* ── History card ───────────────────────────────────────────── */
+    .history-card {
+      background: var(--bg);
+      border: 2px solid var(--navy);
+      border-radius: var(--radius);
+      box-shadow: 3px 3px 0 var(--navy);
+      transition: box-shadow var(--transition), transform var(--transition);
+      overflow: hidden;
+    }
+    .history-card:hover {
+      transform: translate(-1px,-1px);
+      box-shadow: 4px 4px 0 var(--navy);
+    }
+    .history-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: .6rem .75rem .4rem;
+      border-bottom: 1px solid var(--border);
+      gap: .5rem;
+    }
+    .history-card-ts {
+      font-size: .68rem;
+      color: var(--slate-lt);
+      font-weight: 600;
+    }
+    .history-card-filename {
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--navy);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
+    }
+    .history-card-body {
+      padding: .55rem .75rem .65rem;
+      cursor: pointer;
+    }
+    .history-flow {
+      font-size: .75rem;
+      font-weight: 700;
+      color: var(--blue);
+      margin-bottom: .4rem;
+      letter-spacing: .03em;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      flex-wrap: wrap;
+    }
+    .history-card-summary {
+      font-size: .78rem;
+      color: var(--slate);
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* ── Delete controls ────────────────────────────────────────── */
+    .btn-delete {
+      padding: .18rem .55rem;
+      border: 2px solid var(--red);
+      background: transparent;
+      color: var(--red);
+      font-size: .65rem;
+      font-weight: 800;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 2px;
+      flex-shrink: 0;
+      transition: background var(--transition), color var(--transition);
+    }
+    .btn-delete:hover { background: var(--red); color: #fff; }
+
+    .delete-confirm {
+      display: none;
+      align-items: center;
+      gap: .4rem;
+      padding: .4rem .75rem;
+      background: #FFF0F0;
+      border-top: 1px solid var(--border);
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--red);
+    }
+    .delete-confirm.visible { display: flex; }
+
+    .btn-confirm-yes {
+      padding: .15rem .5rem;
+      background: var(--red);
+      color: #fff;
+      border: 2px solid var(--red);
+      border-radius: 2px;
+      font-size: .65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      cursor: pointer;
+    }
+    .btn-confirm-no {
+      padding: .15rem .5rem;
+      background: transparent;
+      color: var(--navy);
+      border: 2px solid var(--navy);
+      border-radius: 2px;
+      font-size: .65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span style="font-size:1.35rem;line-height:1;">🎙</span>
+  <h1>Sarvam Explorer</h1>
+  <span class="badge">POC</span>
+  <button class="btn-history" id="historyBtn">📋 History</button>
+</header>
+<div class="color-strip"></div>
+
+<main>
+
+  <!-- ── STEP 1 ──────────────────────────────────────────────────── -->
+  <div class="card card-step1">
+    <div class="card-title">Step 1 — Upload &amp; Transcribe</div>
+    <div class="row">
+      <label class="file-label" id="fileLabel" for="audioFile">
+        <span>📂</span>
+        <span id="fileLabelText">Choose MP3 file…</span>
+      </label>
+      <input type="file" id="audioFile" accept=".mp3,audio/mpeg,audio/*" />
+
+      <span class="row-label">Transcription language:</span>
+      <select id="transcriptionLang"></select>
+
+      <button class="btn" id="analyseBtn" disabled>Analyse</button>
+    </div>
+    <div class="status info" id="step1Status"></div>
+  </div>
+
+  <!-- ── RESULTS ────────────────────────────────────────────────── -->
+  <div class="card card-results" id="resultsCard" style="display:none;">
+    <div class="card-title">Results</div>
+    <div class="two-col">
+
+      <!-- Analysis -->
+      <div>
+        <div class="panel-head ph-analysis">Analysis</div>
+        <div class="analysis-item" id="aLang"></div>
+        <div class="analysis-item" id="aTone"></div>
+        <div class="analysis-item" id="aTopics"></div>
+        <div class="analysis-item" id="aEntities"></div>
+        <div class="analysis-item" id="aSummary"></div>
+        <div class="analysis-item" id="aRaw" style="display:none;"></div>
+      </div>
+
+      <!-- Transcript -->
+      <div>
+        <div class="panel-head ph-transcript">Transcript</div>
+        <div class="transcript-box" id="transcriptBox"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── STEP 2 ──────────────────────────────────────────────────── -->
+  <div class="card card-step2" id="step2">
+    <div class="card-title">Step 2 — Translate &amp; Speak</div>
+    <div class="row">
+      <span class="row-label">Target language:</span>
+      <select id="targetLang">
+        <option value="">Select a language…</option>
+      </select>
+      <button class="btn" id="submitBtn" disabled>Submit</button>
+    </div>
+    <div class="status info" id="step2Status"></div>
+
+    <textarea class="translated-box" id="translatedBox" readonly
+              placeholder="Translated text will appear here…"
+              style="display:none;"></textarea>
+
+    <!-- Waveform -->
+    <div id="waveformWrap">
+      <div id="waveform"></div>
+      <div class="audio-controls">
+        <button class="btn-play" id="playBtn">▶ Play</button>
+        <a class="btn-download" id="downloadBtn" download="sarvam-tts.mp3">⬇ Download MP3</a>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── HISTORY PANEL ─────────────────────────────────────────── -->
+<aside id="historyPanel" class="history-panel">
+  <div class="history-panel-header">
+    <span class="history-panel-title">📋 Session History</span>
+    <button class="btn-close-history" id="closeHistoryBtn">✕ Close</button>
+  </div>
+  <div id="historyList">
+    <!-- populated by renderHistoryList() -->
+  </div>
+</aside>
+
+<!-- WaveSurfer.js v7 from CDN -->
+<script src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js"></script>
+
+<script>
+  // ── Language list ───────────────────────────────────────────────
+  const LANGUAGES = [
+    { label: "English",   code: "en-IN" },
+    { label: "Hindi",     code: "hi-IN" },
+    { label: "Bengali",   code: "bn-IN" },
+    { label: "Gujarati",  code: "gu-IN" },
+    { label: "Kannada",   code: "kn-IN" },
+    { label: "Malayalam", code: "ml-IN" },
+    { label: "Marathi",   code: "mr-IN" },
+    { label: "Odia",      code: "od-IN" },
+    { label: "Punjabi",   code: "pa-IN" },
+    { label: "Tamil",     code: "ta-IN" },
+    { label: "Telugu",    code: "te-IN" },
+  ];
+
+  // ── DOM refs ────────────────────────────────────────────────────
+  const audioFile         = document.getElementById("audioFile");
+  const fileLabel         = document.getElementById("fileLabel");
+  const fileLabelText     = document.getElementById("fileLabelText");
+  const transcriptionLang = document.getElementById("transcriptionLang");
+  const analyseBtn        = document.getElementById("analyseBtn");
+  const step1Status       = document.getElementById("step1Status");
+  const resultsCard       = document.getElementById("resultsCard");
+  const transcriptBox     = document.getElementById("transcriptBox");
+  const step2             = document.getElementById("step2");
+  const targetLang        = document.getElementById("targetLang");
+  const submitBtn         = document.getElementById("submitBtn");
+  const step2Status       = document.getElementById("step2Status");
+  const translatedBox     = document.getElementById("translatedBox");
+  const waveformWrap      = document.getElementById("waveformWrap");
+  const playBtn           = document.getElementById("playBtn");
+  const downloadBtn       = document.getElementById("downloadBtn");
+  const historyBtn        = document.getElementById("historyBtn");
+  const historyPanel      = document.getElementById("historyPanel");
+  const closeHistoryBtn   = document.getElementById("closeHistoryBtn");
+  const historyList       = document.getElementById("historyList");
+
+  // ── State ───────────────────────────────────────────────────────
+  let currentTranscript     = "";
+  let currentTranscriptLang = "en-IN";
+  let wavesurfer            = null;
+  let currentSessionId      = null;
+
+  // ── Populate Step 1 dropdown (default: English) ─────────────────
+  LANGUAGES.forEach(({ label, code }) => {
+    const opt = new Option(label, code);
+    if (code === "en-IN") opt.selected = true;
+    transcriptionLang.appendChild(opt);
+  });
+
+  // ── File input ──────────────────────────────────────────────────
+  audioFile.addEventListener("change", () => {
+    const file = audioFile.files[0];
+    if (file) {
+      fileLabelText.textContent = file.name;
+      fileLabel.classList.add("has-file");
+      analyseBtn.disabled = false;
+    } else {
+      fileLabelText.textContent = "Choose MP3 file…";
+      fileLabel.classList.remove("has-file");
+      analyseBtn.disabled = true;
+    }
+  });
+
+  // ── Step 1: Analyse ─────────────────────────────────────────────
+  analyseBtn.addEventListener("click", async () => {
+    const file = audioFile.files[0];
+    if (!file) return;
+
+    setStatus(step1Status, "info", true, "Transcribing audio…");
+    analyseBtn.disabled = true;
+    resultsCard.style.display = "none";
+    step2.classList.remove("visible");
+    clearAnalysis();
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("transcription_language", transcriptionLang.value);
+
+    try {
+      const res = await fetch("/api/analyse", { method: "POST", body: formData });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: res.statusText }));
+        throw new Error(err.detail || "Analyse request failed.");
+      }
+
+      setStatus(step1Status, "info", true, "Analysing transcript…");
+      const data = await res.json();
+
+      currentTranscript     = data.transcript;
+      currentTranscriptLang = data.language_code || transcriptionLang.value;
+      currentSessionId      = data.session_id || null;
+
+      renderAnalysis(data.analysis);
+      transcriptBox.textContent = data.transcript;
+
+      resultsCard.style.display = "block";
+      revealStep2();
+      setStatus(step1Status, "success", false, "✓ Analysis complete.");
+    } catch (err) {
+      setStatus(step1Status, "error", false, "Error: " + err.message);
+    } finally {
+      analyseBtn.disabled = !audioFile.files[0];
+    }
+  });
+
+  // ── Render analysis panel ────────────────────────────────────────
+  function renderAnalysis(a) {
+    if (a.raw_analysis) {
+      document.getElementById("aRaw").style.display = "";
+      document.getElementById("aRaw").innerHTML =
+        `<div class="analysis-label">Raw output</div>
+         <div class="analysis-value" style="white-space:pre-wrap;font-size:.82rem;color:var(--slate);">${escHtml(a.raw_analysis)}</div>`;
+      return;
+    }
+
+    renderField("aLang", "Language", escHtml(a.language_detected || "—"));
+
+    const toneClass = {
+      Positive: "tone-positive",
+      Negative: "tone-negative",
+      Neutral:  "tone-neutral",
+    }[a.tone] || "tone-neutral";
+
+    renderField(
+      "aTone", "Tone",
+      `<span class="tone-badge ${toneClass}">${escHtml(a.tone || "—")}</span>
+       <span style="font-size:.8rem;color:var(--slate);margin-left:.45rem;">${escHtml(a.tone_explanation || "")}</span>`
+    );
+
+    renderField("aTopics",   "Topics",       tags(a.topics));
+    renderField("aEntities", "Key Entities", tags(a.key_entities));
+    renderField("aSummary",  "Summary",
+      `<span style="font-size:.88rem;color:var(--slate);">${escHtml(a.summary || "—")}</span>`
+    );
+  }
+
+  function renderField(id, label, html) {
+    document.getElementById(id).innerHTML =
+      `<div class="analysis-label">${label}</div>
+       <div class="analysis-value">${html}</div>`;
+  }
+
+  function tags(arr) {
+    if (!Array.isArray(arr) || !arr.length)
+      return "<span style='color:var(--slate-lt)'>—</span>";
+    return `<div class="tag-list">${arr.map(t => `<span class="tag">${escHtml(t)}</span>`).join("")}</div>`;
+  }
+
+  function clearAnalysis() {
+    ["aLang","aTone","aTopics","aEntities","aSummary"].forEach(id => {
+      document.getElementById(id).innerHTML = "";
+    });
+    document.getElementById("aRaw").style.display = "none";
+    transcriptBox.textContent = "";
+  }
+
+  // ── Step 2 reveal ────────────────────────────────────────────────
+  function revealStep2() {
+    populateTargetLang();
+    step2.classList.add("visible");
+    submitBtn.disabled = true;
+    targetLang.value = "";
+    translatedBox.style.display = "none";
+    waveformWrap.style.display = "none";
+    setStatus(step2Status, "info", false, "");
+    if (wavesurfer) { wavesurfer.destroy(); wavesurfer = null; }
+  }
+
+  function populateTargetLang() {
+    const excluded = transcriptionLang.value;
+    while (targetLang.options.length > 1) targetLang.remove(1);
+    LANGUAGES.forEach(({ label, code }) => {
+      if (code === excluded) return;
+      targetLang.appendChild(new Option(label, code));
+    });
+  }
+
+  // ── Step 2: Submit ───────────────────────────────────────────────
+  targetLang.addEventListener("change", () => {
+    submitBtn.disabled = !targetLang.value;
+  });
+
+  submitBtn.addEventListener("click", async () => {
+    const tgtLang = targetLang.value;
+    if (!tgtLang) return;
+
+    setStatus(step2Status, "info", true, "Translating…");
+    submitBtn.disabled = true;
+    translatedBox.style.display = "none";
+    waveformWrap.style.display = "none";
+
+    try {
+      const res = await fetch("/api/translate-and-speak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          transcript:      currentTranscript,
+          target_language: tgtLang,
+          source_language: currentTranscriptLang,
+          session_id:      currentSessionId,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: res.statusText }));
+        throw new Error(err.detail || "Translate request failed.");
+      }
+
+      setStatus(step2Status, "info", true, "Generating audio…");
+      const data = await res.json();
+
+      translatedBox.value = data.translated_text || "";
+      translatedBox.style.display = "block";
+
+      if (data.tts_error) {
+        setStatus(step2Status, "error", false,
+          "⚠ Translation complete, but TTS failed: " + data.tts_error);
+      } else if (data.audio_url) {
+        setStatus(step2Status, "success", false, "✓ Ready.");
+        await initWaveform(data.audio_url);
+      } else {
+        setStatus(step2Status, "success", false, "✓ Translation complete.");
+      }
+    } catch (err) {
+      setStatus(step2Status, "error", false, "Error: " + err.message);
+    } finally {
+      submitBtn.disabled = !targetLang.value;
+    }
+  });
+
+  // ── WaveSurfer ───────────────────────────────────────────────────
+  async function initWaveform(audioUrl) {
+    if (wavesurfer) { wavesurfer.destroy(); wavesurfer = null; }
+
+    waveformWrap.style.display = "block";
+    downloadBtn.href = audioUrl;
+    playBtn.textContent = "▶ Play";
+
+    wavesurfer = WaveSurfer.create({
+      container:     "#waveform",
+      waveColor:     "#C8102E",   /* cadmium red */
+      progressColor: "#F4C430",   /* chrome yellow */
+      height:        72,
+      barWidth:      3,
+      barGap:        1,
+      barRadius:     2,
+      cursorWidth:   2,
+      cursorColor:   "#1B3FAD",   /* cobalt blue */
+      interact:      true,
+      url:           audioUrl,
+    });
+
+    wavesurfer.on("play",   () => { playBtn.textContent = "⏸ Pause"; });
+    wavesurfer.on("pause",  () => { playBtn.textContent = "▶ Play"; });
+    wavesurfer.on("finish", () => { playBtn.textContent = "▶ Play"; });
+
+    playBtn.onclick = () => wavesurfer.playPause();
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────
+  function setStatus(el, type, spinning, text) {
+    el.className = `status ${type}`;
+    if (!text) { el.innerHTML = ""; return; }
+    el.innerHTML = (spinning ? `<span class="spinner"></span>` : "") + escHtml(text);
+  }
+
+  function escHtml(str) {
+    return String(str ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  // ── History panel ─────────────────────────────────────────────
+
+  function openHistory() {
+    historyPanel.classList.add("open");
+    loadHistory();
+  }
+
+  function closeHistory() {
+    historyPanel.classList.remove("open");
+  }
+
+  async function loadHistory() {
+    historyList.innerHTML = '<div class="history-empty">Loading…</div>';
+    try {
+      const res = await fetch("/api/sessions");
+      if (!res.ok) throw new Error("Failed to load sessions.");
+      const sessions = await res.json();
+      renderHistoryList(sessions);
+    } catch (err) {
+      historyList.innerHTML =
+        `<div class="history-empty">Error: ${escHtml(err.message)}</div>`;
+    }
+  }
+
+  function renderHistoryList(sessions) {
+    historyList.innerHTML = "";
+    if (!sessions.length) {
+      historyList.innerHTML =
+        '<div class="history-empty">No saved sessions yet.</div>';
+      return;
+    }
+    sessions.forEach(s => historyList.appendChild(renderHistoryCard(s)));
+  }
+
+  function langLabel(code) {
+    const lang = LANGUAGES.find(l => l.code === code);
+    return lang ? lang.label : code;
+  }
+
+  function renderHistoryCard(s) {
+    const card = document.createElement("div");
+    card.className = "history-card";
+
+    const ts = new Date(s.created_at).toLocaleString();
+    const srcLabel = langLabel(s.transcription_language);
+    const flowText = s.target_language
+      ? `${srcLabel} → ${langLabel(s.target_language)}`
+      : srcLabel;
+
+    const tone = s.analysis?.tone || "";
+    const toneClass = { Positive: "tone-positive",
+                        Negative: "tone-negative",
+                        Neutral:  "tone-neutral" }[tone] || "tone-neutral";
+    const toneBadge = tone
+      ? `<span class="tone-badge ${toneClass}"
+              style="font-size:.65rem;padding:.15rem .45rem;">${escHtml(tone)}</span>`
+      : "";
+
+    const summary = s.analysis?.summary || s.analysis?.raw_analysis || "";
+
+    card.innerHTML = `
+      <div class="history-card-header">
+        <div>
+          <div class="history-card-ts">${escHtml(ts)}</div>
+          <div class="history-card-filename" title="${escHtml(s.filename)}">${escHtml(s.filename)}</div>
+        </div>
+        <button class="btn-delete" title="Delete session">🗑</button>
+      </div>
+      <div class="history-card-body">
+        <div class="history-flow">${escHtml(flowText)} ${toneBadge}</div>
+        <div class="history-card-summary">${escHtml(summary)}</div>
+      </div>
+      <div class="delete-confirm">
+        Delete this session?
+        <button class="btn-confirm-yes">Confirm</button>
+        <button class="btn-confirm-no">Cancel</button>
+      </div>
+    `;
+
+    // Click body → restore (not the delete controls)
+    card.querySelector(".history-card-body")
+        .addEventListener("click", () => restoreSession(s));
+
+    // Two-step inline delete
+    const btnDelete     = card.querySelector(".btn-delete");
+    const confirmRow    = card.querySelector(".delete-confirm");
+    const btnConfirmYes = card.querySelector(".btn-confirm-yes");
+    const btnConfirmNo  = card.querySelector(".btn-confirm-no");
+
+    btnDelete.addEventListener("click", (e) => {
+      e.stopPropagation();
+      confirmRow.classList.add("visible");
+      btnDelete.style.display = "none";
+    });
+    btnConfirmNo.addEventListener("click", (e) => {
+      e.stopPropagation();
+      confirmRow.classList.remove("visible");
+      btnDelete.style.display = "";
+    });
+    btnConfirmYes.addEventListener("click", (e) => {
+      e.stopPropagation();
+      deleteSession(s.id, card);
+    });
+
+    return card;
+  }
+
+  async function deleteSession(id, cardEl) {
+    try {
+      const res = await fetch(`/api/sessions/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete failed.");
+      cardEl.remove();
+      if (!historyList.querySelector(".history-card")) {
+        historyList.innerHTML =
+          '<div class="history-empty">No saved sessions yet.</div>';
+      }
+    } catch (err) {
+      // Restore card to non-confirm state on failure
+      cardEl.querySelector(".delete-confirm").classList.remove("visible");
+      cardEl.querySelector(".btn-delete").style.display = "";
+      alert("Could not delete session: " + err.message);
+    }
+  }
+
+  async function restoreSession(s) {
+    closeHistory();
+
+    // Restore Step 1 state
+    currentTranscript     = s.transcript;
+    currentTranscriptLang = s.transcription_language;
+    currentSessionId      = s.id;
+
+    // Populate results
+    clearAnalysis();
+    transcriptBox.textContent = s.transcript;
+    renderAnalysis(s.analysis);
+    resultsCard.style.display = "block";
+
+    // Sync Step 1 dropdown so populateTargetLang excludes the right language
+    transcriptionLang.value = s.transcription_language;
+
+    // Reveal Step 2 (inline logic from revealStep2() so we can restore Step 2 state after)
+    populateTargetLang();
+    step2.classList.add("visible");
+    submitBtn.disabled = true;
+    targetLang.value = "";
+    translatedBox.style.display = "none";
+    waveformWrap.style.display = "none";
+    setStatus(step2Status, "info", false, "");
+    if (wavesurfer) { wavesurfer.destroy(); wavesurfer = null; }
+
+    setStatus(step1Status, "success", false, "✓ Session restored.");
+
+    // If Step 2 was previously completed, restore it
+    if (!s.target_language) return;
+
+    targetLang.value = s.target_language;
+    if (targetLang.value) submitBtn.disabled = false;
+
+    if (s.translated_text) {
+      translatedBox.value        = s.translated_text;
+      translatedBox.style.display = "block";
+    }
+
+    if (s.audio_filename) {
+      const audioUrl = `/api/audio/${s.audio_filename}`;
+      try {
+        const check = await fetch(audioUrl, { method: "HEAD" });
+        if (check.ok) {
+          await initWaveform(audioUrl);
+          setStatus(step2Status, "success", false, "✓ Restored.");
+        } else {
+          setStatus(step2Status, "info", false,
+            "Audio file no longer available — re-submit to regenerate.");
+        }
+      } catch {
+        setStatus(step2Status, "info", false,
+          "Audio file no longer available — re-submit to regenerate.");
+      }
+    } else if (s.translated_text) {
+      setStatus(step2Status, "success", false, "✓ Restored (no audio).");
+    }
+  }
+
+  // ── History event listeners ────────────────────────────────────
+  historyBtn.addEventListener("click", openHistory);
+  closeHistoryBtn.addEventListener("click", closeHistory);
+</script>
+</body>
+</html>
