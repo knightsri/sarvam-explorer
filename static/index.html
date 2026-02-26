@@ -400,14 +400,145 @@
       border-radius: 50%;
     }
 
+    /* ── API key modal ──────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(28, 20, 16, 0.75);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal-box {
+      background: var(--card);
+      border: 2px solid var(--navy);
+      border-radius: var(--radius);
+      box-shadow: 5px 5px 0 var(--navy);
+      width: 440px;
+      max-width: calc(100vw - 2rem);
+      overflow: hidden;
+    }
+    .modal-header {
+      background: var(--red);
+      border-bottom: 3px solid var(--navy);
+      padding: .85rem 1.1rem;
+    }
+    .modal-title {
+      font-size: .7rem;
+      font-weight: 900;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--yellow);
+    }
+    .modal-body { padding: 1.25rem 1.1rem 1.1rem; }
+    .modal-desc {
+      font-size: .83rem;
+      color: var(--slate);
+      line-height: 1.55;
+      margin-bottom: 1rem;
+    }
+    .modal-input-wrap {
+      display: flex;
+      gap: .4rem;
+      margin-bottom: .9rem;
+    }
+    .modal-input {
+      flex: 1;
+      padding: .5rem .75rem;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      font-size: .88rem;
+      font-family: monospace;
+      background: var(--bg);
+      color: var(--navy);
+    }
+    .modal-input:focus { outline: none; border-color: var(--blue); }
+    .btn-toggle-key {
+      padding: .5rem .65rem;
+      border: 2px solid var(--border);
+      background: var(--bg);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: .85rem;
+      color: var(--slate);
+      transition: border-color var(--transition);
+    }
+    .btn-toggle-key:hover { border-color: var(--blue); }
+    .modal-actions { display: flex; gap: .6rem; }
+    .btn-modal-submit {
+      padding: .5rem 1.1rem;
+      background: var(--blue);
+      color: #fff;
+      border: 2px solid var(--blue);
+      border-radius: var(--radius);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 var(--navy);
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .btn-modal-submit:hover         { background: var(--blue-dark); border-color: var(--blue-dark); }
+    .btn-modal-submit:active        { transform: translate(2px,2px); box-shadow: none; }
+    .btn-modal-submit:disabled      { opacity: .6; cursor: not-allowed; }
+    .btn-modal-cancel {
+      padding: .5rem .9rem;
+      background: transparent;
+      color: var(--navy);
+      border: 2px solid var(--navy);
+      border-radius: var(--radius);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .modal-msg {
+      font-size: .78rem;
+      font-weight: 700;
+      margin-top: .7rem;
+      min-height: 1.1em;
+    }
+
     /* ── Scrollbar ──────────────────────────────────────────────── */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--red); border-radius: 2px; }
 
+    /* ── Header actions group (right side) ─────────────────────── */
+    .header-actions {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+
+    /* ── No-API-key indicator ───────────────────────────────────── */
+    .btn-no-key {
+      padding: .45rem 1rem;
+      border: 2px solid var(--orange);
+      background: var(--orange);
+      color: #fff;
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 2px;
+      box-shadow: 3px 3px 0 var(--navy);
+      transition: background var(--transition), color var(--transition);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .btn-no-key:hover  { background: #fff; color: var(--orange); }
+    .btn-no-key:active { transform: translate(2px,2px); box-shadow: none; }
+
     /* ── History button (header) ────────────────────────────────── */
     .btn-history {
-      margin-left: auto;
       padding: .45rem 1rem;
       border: 2px solid var(--yellow);
       background: transparent;
@@ -614,7 +745,10 @@
   <span style="font-size:1.35rem;line-height:1;">🎙</span>
   <h1>Sarvam Explorer</h1>
   <span class="badge">POC</span>
-  <button class="btn-history" id="historyBtn">📋 History</button>
+  <div class="header-actions">
+    <button class="btn-no-key" id="keyIndicator" style="display:none;">⚠ NO API KEY</button>
+    <button class="btn-history" id="historyBtn">📋 History</button>
+  </div>
 </header>
 <div class="color-strip"></div>
 
@@ -696,6 +830,28 @@
   <span class="footer-sep"></span>
   <a href="https://github.com/knightsri/sarvam-explorer" target="_blank" rel="noopener">github.com/knightsri/sarvam-explorer</a>
 </footer>
+
+<!-- ── API KEY MODAL ─────────────────────────────────────────── -->
+<div id="keyModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">🔑 Sarvam API Key</div>
+    </div>
+    <div class="modal-body">
+      <p class="modal-desc">Enter your Sarvam API subscription key. It is held in server memory for this session only — not written to disk or database. You will need to re-enter it if the server restarts.</p>
+      <div class="modal-input-wrap">
+        <input type="password" id="apiKeyInput" class="modal-input"
+               placeholder="Paste your API key…" autocomplete="off" spellcheck="false" />
+        <button class="btn-toggle-key" id="keyToggleBtn" title="Show / hide key">👁</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-modal-submit" id="keySubmitBtn">Set Key</button>
+        <button class="btn-modal-cancel" id="keyCancelBtn">Cancel</button>
+      </div>
+      <div class="modal-msg" id="keyModalMsg"></div>
+    </div>
+  </div>
+</div>
 
 <!-- ── HISTORY PANEL ─────────────────────────────────────────── -->
 <aside id="historyPanel" class="history-panel">
@@ -1181,6 +1337,93 @@
   // ── History event listeners ────────────────────────────────────
   historyBtn.addEventListener("click", openHistory);
   closeHistoryBtn.addEventListener("click", closeHistory);
+
+  // ── API key management ────────────────────────────────────────
+
+  const keyIndicator  = document.getElementById("keyIndicator");
+  const keyModal      = document.getElementById("keyModal");
+  const apiKeyInput   = document.getElementById("apiKeyInput");
+  const keyToggleBtn  = document.getElementById("keyToggleBtn");
+  const keySubmitBtn  = document.getElementById("keySubmitBtn");
+  const keyCancelBtn  = document.getElementById("keyCancelBtn");
+  const keyModalMsg   = document.getElementById("keyModalMsg");
+
+  async function checkKeyStatus() {
+    try {
+      const res  = await fetch("/api/key-status");
+      const data = await res.json();
+      keyIndicator.style.display = data.configured ? "none" : "";
+    } catch {}
+  }
+
+  function openKeyModal() {
+    apiKeyInput.value    = "";
+    keyModalMsg.textContent = "";
+    keyModal.classList.add("open");
+    setTimeout(() => apiKeyInput.focus(), 50);
+  }
+
+  function closeKeyModal() {
+    keyModal.classList.remove("open");
+  }
+
+  keyIndicator.addEventListener("click", openKeyModal);
+  keyCancelBtn.addEventListener("click", closeKeyModal);
+
+  // Close on backdrop click
+  keyModal.addEventListener("click", (e) => {
+    if (e.target === keyModal) closeKeyModal();
+  });
+
+  // Close on Escape
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && keyModal.classList.contains("open")) closeKeyModal();
+  });
+
+  keyToggleBtn.addEventListener("click", () => {
+    const show = apiKeyInput.type === "password";
+    apiKeyInput.type       = show ? "text" : "password";
+    keyToggleBtn.textContent = show ? "🙈" : "👁";
+  });
+
+  apiKeyInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") keySubmitBtn.click();
+  });
+
+  keySubmitBtn.addEventListener("click", async () => {
+    const key = apiKeyInput.value.trim();
+    if (!key) {
+      keyModalMsg.style.color = "var(--red)";
+      keyModalMsg.textContent = "Please paste your API key.";
+      return;
+    }
+
+    keySubmitBtn.disabled   = true;
+    keyModalMsg.style.color = "var(--slate)";
+    keyModalMsg.textContent = "Saving…";
+
+    try {
+      const res = await fetch("/api/set-key", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ api_key: key }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: "Request failed." }));
+        throw new Error(err.detail || "Request failed.");
+      }
+      keyIndicator.style.display = "none";
+      closeKeyModal();
+    } catch (err) {
+      keyModalMsg.style.color = "var(--red)";
+      keyModalMsg.textContent = "Error: " + err.message;
+    } finally {
+      keySubmitBtn.disabled = false;
+    }
+  });
+
+  // Check key status on load — show indicator only if key is absent
+  checkKeyStatus();
 </script>
 </body>
 </html>

@@ -12,7 +12,6 @@ from openai import OpenAI
 from pydub import AudioSegment
 from sarvamai import SarvamAI
 
-SARVAM_API_KEY: str = os.environ["SARVAM_API_KEY"]  # fail-fast — checked in main.py first
 SARVAM_BASE_URL = "https://api.sarvam.ai"
 CHUNK_SECONDS = 25
 MAX_DURATION = int(os.getenv("MAX_AUDIO_DURATION", "60"))  # seconds; override via env
@@ -21,16 +20,23 @@ FFMPEG = "ffmpeg"
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+def _get_api_key() -> str:
+    key = os.environ.get("SARVAM_API_KEY", "")
+    if not key:
+        raise RuntimeError("No Sarvam API key configured.")
+    return key
+
+
 def _sarvam() -> SarvamAI:
-    return SarvamAI(api_subscription_key=SARVAM_API_KEY)
+    return SarvamAI(api_subscription_key=_get_api_key())
 
 
 def _llm() -> OpenAI:
-    return OpenAI(api_key=SARVAM_API_KEY, base_url=f"{SARVAM_BASE_URL}/v1")
+    return OpenAI(api_key=_get_api_key(), base_url=f"{SARVAM_BASE_URL}/v1")
 
 
 def _headers() -> dict[str, str]:
-    return {"api-subscription-key": SARVAM_API_KEY, "Content-Type": "application/json"}
+    return {"api-subscription-key": _get_api_key(), "Content-Type": "application/json"}
 
 
 def _chunk_text(text: str, max_chars: int = 500) -> list[str]:

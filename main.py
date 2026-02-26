@@ -10,17 +10,20 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-# Load .env before importing sarvam_client so the key is present
+# Load .env — key may be absent; user can supply it via the UI at runtime
 load_dotenv()
-
-if not os.getenv("SARVAM_API_KEY"):
-    raise RuntimeError(
-        "SARVAM_API_KEY is not set. "
-        "Copy .env.example to .env and add your key, then restart."
-    )
 
 import sarvam_client  # noqa: E402  (import after env is loaded)
 import db             # noqa: E402
+
+
+def _require_api_key() -> None:
+    """Raise 503 if no API key is available yet."""
+    if not os.getenv("SARVAM_API_KEY"):
+        raise HTTPException(
+            status_code=503,
+            detail="No API key configured — enter your Sarvam API key using the key setup dialog in the UI.",
+        )
 
 # ── Directory setup ───────────────────────────────────────────────────────────
 
@@ -55,6 +58,7 @@ async def analyse(
     Upload an MP3 and a transcription language code.
     Returns transcript + structured analysis JSON + session_id.
     """
+    _require_api_key()
     session_id = str(uuid.uuid4())
     created_at = datetime.now(timezone.utc).isoformat()
     suffix = Path(file.filename or "audio").suffix or ".mp3"
@@ -117,6 +121,7 @@ async def translate_and_speak(req: TranslateRequest) -> JSONResponse:
     Translate transcript into target_language, then generate Bulbul TTS audio.
     If TTS fails, returns translated text with audio_url=null and an error message.
     """
+    _require_api_key()
     # Step 1: Translate
     translated = sarvam_client.translate_text(
         req.transcript, req.target_language, req.source_language
@@ -163,6 +168,27 @@ async def get_audio(filename: str) -> FileResponse:
         raise HTTPException(status_code=404, detail="Audio file not found.")
 
     return FileResponse(str(audio_path), media_type="audio/mpeg")
+
+
+# ── /api/key-status & /api/set-key ────────────────────────────────────────────
+
+class SetKeyRequest(BaseModel):
+    api_key: str
+
+
+@app.get("/api/key-status")
+async def key_status() -> JSONResponse:
+    """Return whether a Sarvam API key is currently configured."""
+    return JSONResponse({"configured": bool(os.getenv("SARVAM_API_KEY"))})
+
+
+@app.post("/api/set-key", status_code=204)
+async def set_api_key(body: SetKeyRequest) -> Response:
+    """Store the API key in the server process environment for this session."""
+    if not body.api_key.strip():
+        raise HTTPException(status_code=422, detail="API key cannot be empty.")
+    os.environ["SARVAM_API_KEY"] = body.api_key.strip()
+    return Response(status_code=204)
 
 
 # ── /api/sessions ──────────────────────────────────────────────────────────────
