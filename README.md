@@ -4,6 +4,8 @@ A browser-based tool to transcribe MP3 audio, analyse the transcript with an LLM
 
 **Live demo → [sarvamai.shalusri.com](https://sarvamai.shalusri.com)**
 
+> The demo site is open to anyone — no sign-up required. You will need to bring your own **Sarvam API key** to use it. Keys are free and can be obtained from [sarvam.ai](https://sarvam.ai). Once you have one, click the **⚠ NO API KEY** button in the top-right corner of the app and paste it in — it is held in server memory for your session only and never stored.
+
 ---
 
 ## Prerequisites
