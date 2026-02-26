@@ -1435,6 +1435,10 @@
 
   // Check key status on load — show indicator only if key is absent
   checkKeyStatus();
+
+  // Hint on load — overwritten once the user starts a run
+  setStatus(step1Status, "info", false,
+    "💡 Want to see what this app does? Click 📋 History (top right) to browse previous runs.");
 </script>
 </body>
 </html>
