@@ -2,6 +2,8 @@
 
 A browser-based tool to transcribe MP3 audio, analyse the transcript with an LLM, translate it into an Indian language, and play back the translated speech — all powered by the [Sarvam AI](https://sarvam.ai) API suite.
 
+**Live demo → [sarvamai.shalusri.com](https://sarvamai.shalusri.com)**
+
 ---
 
 ## Prerequisites

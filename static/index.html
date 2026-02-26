@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sarvam Explorer</title>
+  <title>Sarvam.AI Explorer</title>
   <style>
     /* ── Reset ──────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -51,6 +51,15 @@
       letter-spacing: .06em;
       text-transform: uppercase;
       color: var(--yellow);
+    }
+    header h1 a {
+      color: inherit;
+      text-decoration: none;
+    }
+    header h1 a:hover {
+      text-decoration: underline;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 3px;
     }
     header .badge {
       font-size: .6rem;
@@ -743,7 +752,7 @@
 
 <header>
   <span style="font-size:1.35rem;line-height:1;">🎙</span>
-  <h1>Sarvam Explorer</h1>
+  <h1><a href="/">Sarvam.AI Explorer</a></h1>
   <span class="badge">POC</span>
   <div class="header-actions">
     <button class="btn-no-key" id="keyIndicator" style="display:none;">⚠ NO API KEY</button>
@@ -827,6 +836,8 @@
 
 <footer>
   <a href="https://sarvam.ai" target="_blank" rel="noopener">Exploring Sarvam AI</a>
+  <span class="footer-sep"></span>
+  <a href="https://sarvamai.shalusri.com" target="_blank" rel="noopener">sarvamai.shalusri.com</a>
   <span class="footer-sep"></span>
   <a href="https://github.com/knightsri/sarvam-explorer" target="_blank" rel="noopener">github.com/knightsri/sarvam-explorer</a>
 </footer>
