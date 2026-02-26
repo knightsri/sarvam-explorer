@@ -111,7 +111,7 @@ def transcribe_audio(audio_path: str, language_code: str = "en-IN") -> dict:
             with open(path, "rb") as f:
                 resp = sarvam.speech_to_text.transcribe(
                     file=(name, f, "audio/mpeg"),
-                    model="saarika:v3",
+                    model="saarika:v2.5",
                     mode="transcribe",
                     language_code=language_code,
                 )
